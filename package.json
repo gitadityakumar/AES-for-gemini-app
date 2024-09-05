@@ -1,0 +1,30 @@
+{
+  "name": "aes",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b && node ./dist/index.js",
+    "watch": "nodemon --exec ts-node ./src/index.ts",
+    "start": "tsc -b && node ./dist/index.js",
+    "clean": "rm -rf ./dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@google/generative-ai": "^0.16.0",
+    "body-parser": "^1.20.2",
+    "express": "latest",
+    "yt-dlp-exec": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "latest",
+    "@types/node": "^22.5.2",
+    "dotenv": "^16.4.5",
+    "nodemon": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
+  }
+}
