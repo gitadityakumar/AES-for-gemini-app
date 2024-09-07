@@ -75,10 +75,12 @@ export async function convertSrtToTxt(srtFilePath: string, outputFilePath: strin
 
 // Example Usage
 (async () => {
-  const vttFilePath = path.join(__dirname, 'input.vtt');
-  const srtFilePath = path.join(__dirname, 'output.srt');
-  const txtFilePath = path.join(__dirname, 'subtitles.txt');
+  const vttFilePath = path.join(__dirname, 'subtitles', 'input.vtt');
+  const srtFilePath = path.join(__dirname, 'subtitles', 'output.srt');
+  const txtFilePath = path.join(__dirname, 'subtitles', 'subtitles.txt');
 
   await vttToSrt(vttFilePath, srtFilePath);
   await convertSrtToTxt(srtFilePath, txtFilePath);
 })();
+
+
