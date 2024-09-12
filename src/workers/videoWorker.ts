@@ -15,7 +15,13 @@ const videoWorker = new Worker('{video-processing}', async (job: Job) => {
     throw new Error('Job is undefined');
   }
 
-  console.log('Processing job:', job.data);
+  //real processing 
+  const data = job.data;
+  // console.log('data from apiserver:',data);
+  const videoUrl = data.videoData.url;
+  
+
+  
 
   // Simulate video processing
   await new Promise((resolve) => setTimeout(resolve, 5000)); // Simulate some async work

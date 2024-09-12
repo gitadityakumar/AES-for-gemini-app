@@ -1,7 +1,7 @@
 const ytdlp = require('yt-dlp-exec');
 
 //@ts-ignore
-async function downloadAudio(videoUri, p0: string, p1: string) {
+export async function downloadAudio(videoUri) {
   try {
     const output = 'audio.mp3'; // Change to desired path and filename
     await ytdlp(videoUri, {

@@ -31,7 +31,7 @@ export async function vttToSrt(vttFilename: string, srtFilename: string): Promis
     await fs.writeFile(srtFilename, srtData.join('\n'), 'utf-8');
   } catch (error) {
     //@ts-ignore
-    console.error(`Failed to convert VTT to SRT: ${error.message || error}`);
+    console.error(`Failed to convert VTT to SRT:conveterScript.ts ${error.message || error}`);
   }
 }
 
@@ -66,21 +66,21 @@ export async function convertSrtToTxt(srtFilePath: string, outputFilePath: strin
     const plainText = Array.from(textLines).join('\n').replace(/\n{2,}/g, '\n');
 
     await fs.writeFile(outputFilePath, plainText);
-    console.log('Conversion complete. Plain text saved to:', outputFilePath);
+    console.log('Conversion complete. Plain text saved to:conveterScript.ts', outputFilePath);
   } catch (error) {
     //@ts-ignore
-    console.error(`Failed to convert SRT to plain text: ${error.message || error}`);
+    console.error(`Failed to convert SRT to plain text:conveterScript.ts ${error.message || error}`);
   }
 }
 
 // Example Usage
-(async () => {
-  const vttFilePath = path.join(__dirname, 'subtitles', 'input.vtt');
-  const srtFilePath = path.join(__dirname, 'subtitles', 'output.srt');
-  const txtFilePath = path.join(__dirname, 'subtitles', 'subtitles.txt');
+// (async () => {
+//   const vttFilePath = path.join(__dirname, 'subtitles', 'input.vtt');
+//   const srtFilePath = path.join(__dirname, 'subtitles', 'output.srt');
+//   const txtFilePath = path.join(__dirname, 'subtitles', 'subtitles.txt');
 
-  await vttToSrt(vttFilePath, srtFilePath);
-  await convertSrtToTxt(srtFilePath, txtFilePath);
-})();
+//   await vttToSrt(vttFilePath, srtFilePath);
+//   await convertSrtToTxt(srtFilePath, txtFilePath);
+// })();
 
 

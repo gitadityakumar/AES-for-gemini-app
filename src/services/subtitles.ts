@@ -4,9 +4,9 @@ const path = require('path');
 
 /**
  * Downloads subtitles in SRT format for a specific language.
- * @param {string} url - The URL of the video.
- * @param {string} language - The language code for subtitles (e.g., 'en').
- * @param {string} outputDir - The directory to save the subtitle files.
+ * @param {string} url 
+ * @param {string} language 
+ * @param {string} outputDir 
  */
 export async function downloadSubtitles(url: string, language = 'en', outputDir = './subtitles') {
   try {
@@ -47,7 +47,7 @@ export async function downloadSubtitles(url: string, language = 'en', outputDir 
 }
 
 // Example usage
-const videoUrl = 'https://www.youtube.com/watch?v=e5dhaQm_J6U';
-const subtitleLanguage = 'en'; // Language code for English
-const outputDirectory = './subtitles'; // Directory to save subtitles
-downloadSubtitles(videoUrl, subtitleLanguage, outputDirectory);
+// const videoUrl = 'https://www.youtube.com/watch?v=e5dhaQm_J6U';
+// const subtitleLanguage = 'en'; 
+// const outputDirectory = './subtitles'; 
+// downloadSubtitles(videoUrl, subtitleLanguage, outputDirectory);
