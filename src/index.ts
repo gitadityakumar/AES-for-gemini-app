@@ -1,5 +1,7 @@
 // import { main } from "./llm/graq";
 
+import { audioGemini } from "./llm/gemini";
+
 // main();
 
 // import { gemini } from "./llm/gemini";
@@ -10,3 +12,6 @@
 // }
 
 // run();  // Call the function to execute it
+
+console.log(audioGemini());
+

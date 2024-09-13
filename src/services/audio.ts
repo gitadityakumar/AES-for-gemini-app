@@ -1,19 +1,19 @@
-const ytdlp = require('yt-dlp-exec');
+import ytdlp from 'yt-dlp-exec';
 
 //@ts-ignore
 export async function downloadAudio(videoUri) {
   try {
-    const output = 'audio.mp3'; // Change to desired path and filename
+    const output = '../../subtitles/audio.mp3'; 
     await ytdlp(videoUri, {
       output: output,
       extractAudio: true,
-      audioFormat: 'wav', // Choose the audio format: mp3, wav, m4a, etc.
+      audioFormat: 'wav', 
     });
-    console.log(`Audio downloaded to ${output}`);
+    // console.log(`Audio downloaded to ${output}`);
     return output;
   } catch (error) {
     //@ts-ignore
-    console.error(`Error downloading audio: ${error.message}`);
+    // console.error(`Error downloading audio: ${error.message}`);
     throw error;
   }
 }
@@ -21,7 +21,7 @@ export async function downloadAudio(videoUri) {
 // Example usage
 // const videoUri = 'https://www.youtube.com/watch?v=e5dhaQm_J6U';
 // downloadAudio(videoUri).then((output) => {
-//   console.log(`Audio downloaded successfully: ${output}`);
+//   // console.log(`Audio downloaded successfully: ${output}`);
 // }).catch((error) => {
-//   console.error(`Failed to download audio: ${error}`);
+//   // console.error(`Failed to download audio: ${error}`);
 // });
