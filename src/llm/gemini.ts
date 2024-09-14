@@ -42,12 +42,9 @@ export async function gemini(txtFilePath){
      });
     const prompt = `${subtitlesContent}`;
     const result = await model.generateContent(prompt);
-    const totalToken = result.response.usageMetadata?.totalTokenCount;
+    // const totalToken = result.response.usageMetadata?.totalTokenCount;
     const output = result.response.text();
-    return {
-      output,
-      totalToken
-  }
+    return output;
   }catch(error){
     console.error("Error during processing:", error);
   }

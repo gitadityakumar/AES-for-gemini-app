@@ -3,6 +3,8 @@ import fs from 'fs';
 import { downloadSubtitles } from '../services/subtitles';
 import { convertSrtToTxt, vttToSrt } from '../services/convertScript';
 import { downloadAudio } from '../services/audio';
+import { main } from '../llm/graq';
+import { gemini } from '../llm/gemini';
 
 interface ApiResponse {
   videoData: {
@@ -76,7 +78,9 @@ async function cleanUpSubtitles(directory: string) {
 
 // Placeholder for LLM API call
 async function sendToLLM(filePath: string): Promise<any> {
-  return { success: true, message: 'LLM processing completed.' };
+  // return { success: true, message: 'LLM processing completed.' };
+  const res = await gemini(filePath);
+  console.log(res);
 }
 
 

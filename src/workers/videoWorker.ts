@@ -1,11 +1,13 @@
 import { Worker } from 'bullmq';
 import { QueueOptions, Job } from 'bullmq';
+import { processing } from '../controllers/main';
+import { getVideoDuration, parseDuration } from '../utils/durationChecker';
 
-// Dragonfly connection options
+
 const workerOptions: QueueOptions = {
   connection: {
-    host: 'localhost',  // Dragonfly is running locally
-    port: 6379,         // Default Dragonfly port
+    host: 'localhost',  
+    port: 6379,         
   }
 };
 
@@ -15,23 +17,40 @@ const videoWorker = new Worker('{video-processing}', async (job: Job) => {
     throw new Error('Job is undefined');
   }
 
-  //real processing 
   const data = job.data;
-  // console.log('data from apiserver:',data);
   const videoUrl = data.videoData.url;
-  
+  console.log(`Processing job ${job.id} for video: ${videoUrl}`);
+  // const expectedDuration = parseDuration(data.videoData.duration);
 
-  
+  try {
+    await job.updateProgress(10); // 10% progress: Validation phase
+    const actualDuration = await getVideoDuration(videoUrl);
+    const maxDurationInSeconds = 10000;
 
-  // Simulate video processing
-  await new Promise((resolve) => setTimeout(resolve, 5000)); // Simulate some async work
+    if (actualDuration > maxDurationInSeconds) {
+      console.error(`Validation failed for Job ${job.id}: Video exceeds maximum allowed duration of 10 minutes.`);
+      await job.moveToFailed(new Error('Video exceeds maximum allowed duration of 10 minutes'), 'Video exceeds maximum allowed duration');
+      return; // Exit early, do not proceed with processing
+    }
 
-  console.log('Job completed:', job.id);
+   
+    await job.updateProgress(50); 
+    await processing(data);
+
+    await job.updateProgress(100); // 100% progress: Processing complete
+
+    console.log(`Job ${job.id} completed successfully!`);
+  } catch (err) {
+    //@ts-ignore
+    console.error(`Error processing job ${job.id}:`, err.message);
+    //@ts-ignore
+    await job.moveToFailed(err, `Job failed during processing: ${err.message}`);
+  }
 }, workerOptions);
 
 // Event handlers for completed and failed jobs
 videoWorker.on('completed', (job: Job) => {
-  console.log(`Job ${job.id} has completed!`);
+  console.log(`Job ${job.id} has completed successfully!`);
 });
 
 videoWorker.on('failed', (job: Job | undefined, err: Error) => {

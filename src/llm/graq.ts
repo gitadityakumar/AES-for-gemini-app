@@ -46,7 +46,7 @@ do not give me anyting except having a json object containing all words and thei
           },
         ],
         model: "llama3-70b-8192",
-        temperature: 0.97,
+        temperature: 1,
         max_tokens: 8192,
         top_p: 1,
         stream: false,
