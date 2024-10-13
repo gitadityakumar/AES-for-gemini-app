@@ -134,6 +134,8 @@
 
 //@ts-ignore
 export async function gemini(path:any){
-  
+  setTimeout(()=>{
+    console.log("Log FROM GEIMIN FN")
+  },3000)
   return "hi there i am from gemini , you are working great."
 }

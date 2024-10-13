@@ -26,7 +26,7 @@ const videoWorker = new Worker('{video-processing}', async (job: Job) => {
 
     // Step 2: Validate video duration
     const actualDuration = await getVideoDuration(videoUrl);
-    const maxDurationInSeconds = 10000;
+    const maxDurationInSeconds = 1800; //30 minute of video
 
     if (actualDuration > maxDurationInSeconds) {
       console.error(`Validation failed for Job ${job.id}: Video exceeds maximum allowed duration of 10 minutes.`);
@@ -39,10 +39,10 @@ const videoWorker = new Worker('{video-processing}', async (job: Job) => {
 
     await job.updateProgress(50);
 
-    const updateProgress = async (progress: number) => {
+    const progress = async (progress: number) => {
       await job.updateProgress(progress);
     };
-    await processing(data, updateProgress);
+    await processing(data, progress);
     await job.updateProgress(100);
   } catch (err) {
     //@ts-ignore
@@ -58,14 +58,16 @@ videoWorker.on('active', (job: Job) => {
   console.log(`Job ${job.id} is active!`);
 });
 
-// When job makes progress updates
-videoWorker.on('progress', (job: Job) => {
-  console.log(`Job ${job.id} is at ${job.progress}% progress.`);
-});
-
 // When job is completed successfully
 videoWorker.on('completed', (job: Job) => {
   console.log(`Job ${job.id} has completed successfully!`);
+});
+
+
+
+// When job makes progress updates
+videoWorker.on('progress', (job: Job) => {
+  console.log(`Job ${job.id} is at ${job.progress}% progress.`);
 });
 
 // When job fails
@@ -76,3 +78,4 @@ videoWorker.on('failed', (job: Job | undefined, err: Error) => {
     console.log(`A job failed with error: ${err.message}`);
   }
 });
+

@@ -6,6 +6,7 @@ import { downloadAudio } from '../services/audio';
 import { main } from '../llm/graq';
 import { gemini } from '../llm/gemini';
 
+
 interface ApiResponse {
   Data: {
     url: string;
@@ -17,7 +18,7 @@ interface ApiResponse {
 
 export async function processing(
   data: ApiResponse,
-  updateProgress: (progress: number) => Promise<void>
+  progress: (progress: number) => Promise<void>
 ) {
   const videoUrl = data.Data[0].url;   
   const videoTitle = data.Data[0].title; 
@@ -33,7 +34,8 @@ export async function processing(
     await downloadSubtitles(videoUrl, subtitleLanguage, outputDirectory);
     const subtitleFiles = await fs.promises.readdir(outputDirectory);
     const vttFile = subtitleFiles.find((file) => file.endsWith('.vtt'));
-    await updateProgress(60); 
+    await progress(60); 
+    
 
     // Check if VTT file was found
     if (!vttFile) {
@@ -45,31 +47,31 @@ export async function processing(
     const srtFilePath = vttFilePath.replace('.vtt', '.srt');
     const txtFilePath = vttFilePath.replace('.vtt', '.txt');
     await vttToSrt(vttFilePath, srtFilePath);
-    await updateProgress(70); 
+    await progress(70); 
     await convertSrtToTxt(srtFilePath, txtFilePath);
-    await updateProgress(80); 
+    await progress(80); 
 
     // Step 3: Send TXT to LLM for processing
     const llmResponse = await sendToLLM(txtFilePath);
-    await updateProgress(90); 
+    await progress(90); 
 
     // Log and clean up
     console.log('Processing done:', llmResponse);
     await cleanUpSubtitles(outputDirectory);
-    await updateProgress(100); 
+    await progress(100); 
   } catch (subtitleError) {
     console.error('Failed to download or process subtitles:', subtitleError);
 
     try {
       // Step 4: Fallback to download and process audio if subtitles fail
-      await updateProgress(60); 
+      await progress(60); 
       const audioOutput = await downloadAudio(videoUrl);
       const llmResponse = await sendToLLM(audioOutput);
-      await updateProgress(90); // Progress after audio fallback and LLM processing
+      await progress(90); // Progress after audio fallback and LLM processing
 
       console.log('Processing done with audio:', llmResponse);
       await cleanUpSubtitles(outputDirectory);
-      await updateProgress(100); // Final progress update
+      await progress(100); // Final progress update
     } catch (audioError) {
       console.error('Failed to download audio:', audioError);
       throw new Error('Processing failed. Could not download subtitles or audio.');
