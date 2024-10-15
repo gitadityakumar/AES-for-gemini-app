@@ -46,5 +46,5 @@ const videoCardSchema: Schema = new Schema({
   }]
 });
 
-const Video = mongoose.model<IVideo>('VideoCard', videoCardSchema);
-export default Video;
+const VideoCard = mongoose.model<IVideo>('VideoCard', videoCardSchema);
+export default VideoCard;

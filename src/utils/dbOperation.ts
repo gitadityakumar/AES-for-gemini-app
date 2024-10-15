@@ -1,6 +1,7 @@
 import VideoCard from '../models/videoCard';  // Assuming your VideoCard schema is defined
 import  InitialData  from '../models/initialData';  // Assuming your InitialData schema is defined
 import mongoose from 'mongoose';
+import dbConnect from './dbConnect';
 
 // Function to create new VideoCard and InitialData documents in the DB
 export async function storeVideoData(
@@ -15,6 +16,8 @@ export async function storeVideoData(
   parsedLLMData: { word: string; meaning: string }[]
 ) {
   try {
+     // Ensure the database is connected
+    await dbConnect();  
     // Step 1: Create and save VideoCard document
     const newVideoCard = new VideoCard({
       title: videoDetails.title,
@@ -27,7 +30,7 @@ export async function storeVideoData(
     });
     
     const savedVideoCard = await newVideoCard.save();
-    console.log('VideoCard saved:', savedVideoCard);
+    console.log('VideoCard saved');
 
     // Step 2: Store InitialData (word-meaning pairs)
     const initialDataIds: mongoose.Types.ObjectId[] = [];
@@ -54,7 +57,7 @@ export async function storeVideoData(
     savedVideoCard.initialData = initialDataIds;
     await savedVideoCard.save();
 
-    console.log('VideoCard updated with InitialData:', savedVideoCard);
+    console.log('VideoCard updated with InitialData:');
     return savedVideoCard;  // Return the fully updated VideoCard
 
   } catch (error) {

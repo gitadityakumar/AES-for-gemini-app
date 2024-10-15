@@ -5,12 +5,32 @@ import { convertSrtToTxt, vttToSrt } from '../services/convertScript';
 import { downloadAudio } from '../services/audio';
 import { main } from '../llm/graq';
 import { gemini } from '../llm/gemini';
+import { parseLLMResponse } from '../utils/jsonParse';
+import { storeVideoData } from '../utils/dbOperation';
+
+interface VideoDetails {
+  title: string;
+  duration: string;
+  thumbnailUrl: string;
+  userId: string;
+  model: string;
+  usage: string;
+}
+
+interface ParsedLLMData {
+  word: string;
+  meaning: string;
+}
+
 
 
 interface ApiResponse {
   Data: {
     url: string;
     title: string;
+    userId:string;
+    duration:number;
+    thumbnailUrl:string;
   }[];
   usage: string;
   model: string | null;
@@ -22,6 +42,9 @@ export async function processing(
 ) {
   const videoUrl = data.Data[0].url;   
   const videoTitle = data.Data[0].title; 
+  const userId = data.Data[0].userId;
+  const duration = data.Data[0].duration;
+  const thumbnailUrl = data.Data[0].thumbnailUrl;
   const usage = data.usage; 
   const model = data.model; 
   
@@ -52,11 +75,25 @@ export async function processing(
     await progress(80); 
 
     // Step 3: Send TXT to LLM for processing
-    const llmResponse = await sendToLLM(txtFilePath);
+    const llmResponse = await sendToLLM(txtFilePath,model);
+    const parsedData = parseLLMResponse(llmResponse);
+    // save  data to db 
+    const videoDetails: VideoDetails = {
+      title: videoTitle,
+      duration: duration.toString(),  
+      thumbnailUrl: thumbnailUrl,  
+      userId: userId, 
+      model: model || 'Gemini', 
+      usage: usage
+    };
+
+    await sendToDb(videoDetails, parsedData);
+    
+
     await progress(90); 
 
     // Log and clean up
-    console.log('Processing done:', llmResponse);
+    
     await cleanUpSubtitles(outputDirectory);
     await progress(100); 
   } catch (subtitleError) {
@@ -66,10 +103,24 @@ export async function processing(
       // Step 4: Fallback to download and process audio if subtitles fail
       await progress(60); 
       const audioOutput = await downloadAudio(videoUrl);
-      const llmResponse = await sendToLLM(audioOutput);
+      const llmResponse = await sendToLLM(audioOutput,model);
+      
+      // Change the return type of parseLLMResponse to match your expectations
+      const parsedData = parseLLMResponse(llmResponse);
+      // save  data to db 
+      const videoDetails: VideoDetails = {
+        title: videoTitle,
+        duration: duration.toString(),  
+        thumbnailUrl: thumbnailUrl,  
+        userId: userId, 
+        model: model || 'Gemini', 
+        usage: usage
+      };
+  
+      await sendToDb(videoDetails, parsedData);
+
       await progress(90); // Progress after audio fallback and LLM processing
 
-      console.log('Processing done with audio:', llmResponse);
       await cleanUpSubtitles(outputDirectory);
       await progress(100); // Final progress update
     } catch (audioError) {
@@ -100,13 +151,12 @@ async function cleanUpSubtitles(directory: string) {
   }
 }
 
-// Placeholder for LLM API call
-async function sendToLLM(filePath: string): Promise<any> {
+// for LLM API call
+async function sendToLLM(filePath: string, model: string | null): Promise<any> {
   try {
-    // Determine which LLM to use (e.g., based on some logic)
-    const useGemini = true; // Add logic to switch between Gemini or Groq
+    const useGemini = model === 'Gemini' || model === null; // Treat 'Gemini' and null as Gemini
     let response;
-
+    
     if (useGemini) {
       response = await gemini(filePath);
     } else {
@@ -117,5 +167,16 @@ async function sendToLLM(filePath: string): Promise<any> {
   } catch (error) {
     console.error('Error in LLM processing:', error);
     throw new Error('LLM processing failed.');
+  }
+}
+
+
+
+async function sendToDb(videoDetails: VideoDetails, parsedLLMData: ParsedLLMData[]) {
+  try {
+    const result = await storeVideoData(videoDetails, parsedLLMData);
+    console.log('Successfully processed and stored data:');
+  } catch (error) {
+    console.error('Error processing video task:', error);
   }
 }
