@@ -17,7 +17,11 @@ const videoWorker = new Worker('{video-processing}', async (job: Job) => {
   }
 
   const data = job.data;
-  const videoUrl = data.Data[0].url;  
+  const videoUrl = data.Data[0].url;
+  // const mode = data.usage;
+  // const model = data.model;
+  // const apikey = data.key;
+  
   // console.log(`Processing job ${job.id} for video: ${videoUrl}`);
 
   try {
@@ -29,12 +33,14 @@ const videoWorker = new Worker('{video-processing}', async (job: Job) => {
     const maxDurationInSeconds = 1800; //30 minute of video
 
     if (actualDuration > maxDurationInSeconds) {
-      console.error(`Validation failed for Job ${job.id}: Video exceeds maximum allowed duration of 10 minutes.`);
-      await job.moveToFailed(
-        new Error('Video exceeds maximum allowed duration of 10 minutes'),
-        'Video exceeds maximum allowed duration'
+      console.error(
+        `Validation failed for Job ${job.id}: Video exceeds maximum allowed duration of 10 minutes.`
       );
-      return; 
+      await job.moveToFailed(
+        new Error("Video exceeds maximum allowed duration of 10 minutes"),
+        "Video exceeds maximum allowed duration"
+      );
+      return;
     }
 
     await job.updateProgress(50);

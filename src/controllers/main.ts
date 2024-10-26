@@ -7,7 +7,9 @@ import { main } from '../llm/graq';
 import { gemini } from '../llm/gemini';
 import { parseLLMResponse } from '../utils/jsonParse';
 import { storeVideoData } from '../utils/dbOperation';
-
+import * as dotenv from "dotenv";
+import { decrypt, EncryptedData } from '../utils/decryption';
+dotenv.config();
 interface VideoDetails {
   title: string;
   duration: string;
@@ -25,6 +27,7 @@ interface ParsedLLMData {
 
 
 interface ApiResponse {
+ 
   Data: {
     url: string;
     title: string;
@@ -34,6 +37,7 @@ interface ApiResponse {
   }[];
   usage: string;
   model: string | null;
+  key: EncryptedData;
 }
 
 export async function processing(
@@ -47,10 +51,17 @@ export async function processing(
   const thumbnailUrl = data.Data[0].thumbnailUrl;
   const usage = data.usage; 
   const model = data.model; 
-  
-  // console.log(`Processing video: ${videoTitle} (${videoUrl}), Usage: ${usage}, Model: ${model}`);
+  const userKey = data.key;
+  let apiKey ;
   const subtitleLanguage = 'en'; 
   const outputDirectory = './subtitles';
+
+  //load api key based on mode and model 
+  if(usage === "public"){
+      apiKey = process.env.GEMINI_API_KEY;
+  }else{
+    apiKey = decrypt(userKey);
+  }
 
   try {
     // Step 1: Try to download subtitles
@@ -75,7 +86,7 @@ export async function processing(
     await progress(80); 
 
     // Step 3: Send TXT to LLM for processing
-    const llmResponse = await sendToLLM(txtFilePath,model);
+    const llmResponse = await sendToLLM(txtFilePath,model,apiKey!);
     const parsedData = parseLLMResponse(llmResponse);
     // save  data to db 
     const videoDetails: VideoDetails = {
@@ -103,9 +114,9 @@ export async function processing(
       // Step 4: Fallback to download and process audio if subtitles fail
       await progress(60); 
       const audioOutput = await downloadAudio(videoUrl);
-      const llmResponse = await sendToLLM(audioOutput,model);
+      const Key = apiKey;
+      const llmResponse = await sendToLLM(audioOutput,model,Key!);
       
-      // Change the return type of parseLLMResponse to match your expectations
       const parsedData = parseLLMResponse(llmResponse);
       // save  data to db 
       const videoDetails: VideoDetails = {
@@ -122,7 +133,7 @@ export async function processing(
       await progress(90); // Progress after audio fallback and LLM processing
 
       await cleanUpSubtitles(outputDirectory);
-      await progress(100); // Final progress update
+      await progress(100); 
     } catch (audioError) {
       console.error('Failed to download audio:', audioError);
       throw new Error('Processing failed. Could not download subtitles or audio.');
@@ -152,23 +163,32 @@ async function cleanUpSubtitles(directory: string) {
 }
 
 // for LLM API call
-async function sendToLLM(filePath: string, model: string | null): Promise<any> {
+async function sendToLLM(filePath: string, model: string | null, key: string | null): Promise<any> {
   try {
-    const useGemini = model === 'Gemini' || model === null; // Treat 'Gemini' and null as Gemini
-    let response;
-    
-    if (useGemini) {
-      response = await gemini(filePath);
-    } else {
-      response = await main(filePath); // Groq (Llama) logic
-    }
+    // Normalize model to lowercase for consistent comparison
+    const normalizedModel = model?.toLowerCase() || null;
+    const useGemini = normalizedModel === 'gemini' || (normalizedModel === null && !!key);
 
-    return response;
+    // console.log(`Selected Model: ${normalizedModel}`);
+    // console.log(`Use Gemini: ${useGemini}`);
+    // console.log(`API Key provided: ${key ? '[Key Present]' : '[No Key]'}`);
+
+    if (useGemini) {
+      if (!key) {
+        throw new Error('Private API key is required for Gemini in private mode.');
+      }
+      console.log(`Calling gemini with key: ${key ? '[Key Present]' : '[No Key]'}`);
+      return await gemini(filePath, key);
+    } else {
+      console.log(`Calling main with key: ${key ? '[Key Present]' : '[No Key]'}`);
+      return await main(filePath, key || '');
+    }
   } catch (error) {
     console.error('Error in LLM processing:', error);
     throw new Error('LLM processing failed.');
   }
 }
+
 
 
 
